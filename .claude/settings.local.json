@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(if [ -d \"specs\" ])",
+      "Bash(then ls -d specs/[0-9]*-rewards-cashback-app)",
+      "Bash(else echo \"No specs directory\")",
+      "Bash(fi)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh --json --number 1 --short-name \"rewards-cashback-app\" \"Build a Rewards and Cashback application based on the Figma design with these key features:\n\n1. Dashboard: Show balance and transaction history \\(cashback, referral_bonus, withdrawal\\) grouped by month.\n2. Withdrawal Flow: Allow selecting a bank account \\(WithdrawalMethod\\), confirming the amount, and showing success.\n3. Business Logic: Prevent consecutive withdrawals of the same amount within minutes \\(warning message\\).\n4. Architecture: Implement a React frontend and a simple Node.js backend with JSON or SQLite persistence as allowed by the constitution.\")",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)"
+    ]
+  }
+}

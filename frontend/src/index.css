@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-kiwi-blue: #043960;
+  --color-kiwi-green: #16A34A;
+  --color-kiwi-dark: #0F172A;
+  --color-kiwi-gray-bg: #F1F5F9;
+  --color-kiwi-border: #E2E8F0;
+  --color-kiwi-muted: #64748B;
+  --color-kiwi-white: #FFFFFF;
+  --color-kiwi-disabled: #CBD5E1;
+  --color-kiwi-accent: #33CAFF;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #FFFFFF;
+}

@@ -1,119 +1,84 @@
-# Kiwi Challenge
+# Kiwi Challenge — Rewards/Cashback App
 
-A technical challenge to build a **Rewards/Cashback application** using [GitHub Spec-Kit](https://github.com/github/spec-kit).
+Full‑stack application built with **GitHub Spec‑Kit** that mirrors the Figma flow for a rewards/cashback experience: balance, transaction history, and withdrawal to a bank account.
 
-## What's Already Configured
+## Technical approach (summary)
+- **Spec‑Kit** used to define scope, contracts, data, and tasks (`/specs/001-rewards-cashback-app`).
+- **Frontend** in React + Vite + Tailwind, with reusable components and centralized state via context.
+- **Backend** in Node.js + Express with **SQLite** for local persistence, validations via `express-validator`, and a layered architecture.
+- **Testing** with Vitest (frontend and backend).
 
-The project constitution has been set up at `.specify/memory/constitution.md` with the following core principles:
+## Architectural decisions
+- **FE/BE separation**: two independent packages (`/frontend`, `/backend`).
+- **Layered backend**: `api/` (routes + validation), `services/` (business logic), `models/` (data access), `db/` (migrations/seed). This improves testability and scalability.
+- **Local persistence**: SQLite reduces setup friction and supports fast end‑to‑end evaluation.
+- **Env‑based config**: URLs and ports are configurable.
 
-1. **React-First Frontend** - React is required for the frontend
-2. **API-Driven Backend** - RESTful API with proper validations
-3. **Flexible Persistence** - Choose your database (PostgreSQL, SQLite, MongoDB, or JSON)
-4. **Pragmatic Testing** - Tests are required but not strict TDD
-5. **SOLID & Clean Code** - Follow SOLID principles and clean code practices
+## Requirements
+- Node.js **18+**
+- pnpm
 
-## The Challenge
+## Setup
+> Run these steps from the repo root.
 
-Build a Rewards application based on the Figma design that allows users to:
-- View their accumulated rewards balance
-- See transaction history (cashback, referral bonuses, withdrawals)
-- Withdraw funds to a linked bank account
-
-### Resources
-
-- [Full Challenge Instructions (Notion)](https://eslavadev.notion.site/Test-Kiwi-2c3156058be680b0964cebac1f3cf865)
-- [Figma Design](https://www.figma.com/design/A2GHMXbAIUTtmW9b7kQH7V/Prueba-T%C3%A9cnica?node-id=0-1&p=f&t=MYhwBI3i0D9vVyrk-0)
-
-## What You Need to Do
-
-Follow the Spec-Kit workflow to plan and implement the application:
-
-### 1. Create the Specification
+### 1) Backend
 ```bash
-/speckit.specify
+cd backend
+pnpm install
+cp .env.example .env
+pnpm run db:init
+pnpm run dev
 ```
-Describe the feature based on the Figma design. The tool will help you create a detailed specification.
+The backend runs on **http://localhost:3000** by default.
 
-### 2. Clarify Requirements (Optional)
+### 2) Frontend
 ```bash
-/speckit.clarify
+cd ../frontend
+pnpm install
+cp .env.example .env
+pnpm run dev
 ```
-If there are ambiguities, use this to refine the specification.
+The frontend runs on **http://localhost:5173** and consumes the API at `http://localhost:3000/api` (configurable in `.env`).
 
-### 3. Create the Implementation Plan
+## Tests
+### Backend
 ```bash
-/speckit.plan
+cd backend
+pnpm run test
 ```
-Design the technical approach, data models, and API contracts.
-
-### 4. Generate Tasks
+### Frontend
 ```bash
-/speckit.tasks
-```
-Break down the plan into actionable, dependency-ordered tasks.
-
-### 5. Implement
-```bash
-/speckit.implement
-```
-Execute the tasks to build the application.
-
-### 6. Analyze (Optional)
-```bash
-/speckit.analyze
-```
-Validate consistency across all artifacts.
-
-## Technology Stack
-
-### Required
-- **Frontend**: React (v17+)
-
-### Your Choice
-- **Backend**: Node.js/Express, Python/FastAPI, Go, or any other
-- **Database**: PostgreSQL, SQLite, MongoDB, or JSON file storage
-- **State Management**: React Context, Redux, Zustand, or useState
-- **Styling**: CSS Modules, Tailwind, Styled Components, or plain CSS
-
-## Evaluation Criteria
-
-- Fidelity to the Figma design
-- Code quality (cleanliness, patterns, cohesion, modularity)
-- Correct use of Spec-Kit for both frontend and backend
-- Completeness of the functional flow
-- Project structure and folder organization
-- UX details (feedback, loaders, micro-interactions)
-- SOLID principles and clean code practices
-- Test coverage for critical functionality
-
-## Deliverables
-
-1. Public repository (or private with access granted) containing:
-   - Frontend code
-   - Backend code
-   - All Spec-Kit artifacts (spec.md, plan.md, tasks.md)
-
-2. Updated README with:
-   - Brief explanation of your technical approach
-   - Architectural decisions
-   - Setup and run instructions
-   - Any assumptions made
-
-## Getting Started
-
-```bash
-# Clone the repository
-git clone <your-fork-url>
-cd kiwi-challenge
-
-# Start working with Spec-Kit
-# Run /speckit.specify to begin
+cd frontend
+pnpm run test
 ```
 
-## Estimated Time
+## Project structure
+```
+kiwi-challenge-1/
+  backend/
+  frontend/
+  specs/001-rewards-cashback-app/
+```
 
-1-3 hours recommended, but quality over speed is preferred.
+## Spec‑Kit artifacts
+Main artifacts are located at:
+- `specs/001-rewards-cashback-app/spec.md`
+- `specs/001-rewards-cashback-app/plan.md`
+- `specs/001-rewards-cashback-app/tasks.md`
+- `specs/001-rewards-cashback-app/data-model.md`
 
----
+## Assumptions
+- The flow is **single‑user** (no authentication) to focus on the core experience.
+- Local persistence with SQLite and seeded data for quick testing.
+- API base URL is configured via the frontend `.env`.
 
-Good luck!
+## Useful scripts
+### Backend
+- `pnpm run dev` — start API
+- `pnpm run db:init` — migrate + seed
+- `pnpm run test` — run tests
+
+### Frontend
+- `pnpm run dev` — start app
+- `pnpm run build` — production build
+- `pnpm run test` — run tests
