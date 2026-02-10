@@ -32,18 +32,18 @@ A user opens the rewards application to check their current balance and review t
 
 ### User Story 2 - Complete Withdrawal Flow (Priority: P2)
 
-A user wants to withdraw their rewards balance to their bank account. They select one of their linked bank accounts, enter or confirm the withdrawal amount, and receive confirmation that their withdrawal request was successful.
+A user wants to withdraw their entire rewards balance to their bank account. They see their withdrawal amount (full balance), select one of their linked bank accounts, confirm the withdrawal, and receive confirmation that their withdrawal request was successful.
 
 **Why this priority**: This is the primary action users take to convert their rewards into real money. Without withdrawals, rewards have no tangible value. This is essential but depends on having a balance to withdraw (P1).
 
-**Independent Test**: Can be tested by selecting a withdrawal method from a predefined list, entering an amount, confirming the withdrawal, and verifying that a success message is displayed and the balance is updated accordingly.
+**Independent Test**: Can be tested by viewing the pre-filled amount, selecting a withdrawal method from a predefined list, confirming the withdrawal, and verifying that a success message is displayed and the balance is updated accordingly.
 
 **Acceptance Scenarios**:
 
-1. **Given** a user has a balance of $100 and two linked bank accounts, **When** they initiate a withdrawal, **Then** they see a list of their bank accounts to choose from
-2. **Given** a user selects a bank account, **When** they enter a withdrawal amount of $50, **Then** they are shown a confirmation screen displaying the amount, bank account details (masked), and a confirm button
-3. **Given** a user is on the confirmation screen for a $50 withdrawal, **When** they confirm the withdrawal, **Then** they see a success message and their balance is reduced by $50
-4. **Given** a user has a balance of $30, **When** they attempt to withdraw $50, **Then** they see an error message stating "Insufficient balance"
+1. **Given** a user has a balance of $100 and two linked bank accounts, **When** they initiate a withdrawal, **Then** they see their full balance as the withdrawal amount and a prompt to select a bank account
+2. **Given** a user is on the amount screen, **When** they select a bank account, **Then** they are shown a confirmation screen displaying the amount, bank account details (masked), and a confirm button
+3. **Given** a user is on the confirmation screen for a withdrawal, **When** they confirm the withdrawal, **Then** they see a success message and their balance is reduced accordingly
+4. **Given** a user has a balance of $30, **When** they attempt to withdraw $50 (manually edited), **Then** they see an error message stating "Saldo insuficiente" (Insufficient balance)
 5. **Given** a user completes a withdrawal, **When** they return to the dashboard, **Then** they see a new withdrawal transaction in their history with a negative amount
 
 ---
@@ -73,9 +73,9 @@ To prevent accidental duplicate withdrawals, when a user attempts to withdraw th
 - How does the system handle concurrent withdrawal requests?
   - Only one withdrawal can be processed at a time per user to prevent balance inconsistencies
 - What happens when a withdrawal amount has more than 2 decimal places?
-  - System should round to 2 decimal places or reject the input with validation error
+  - System rejects the input with a validation error (amounts must have at most 2 decimal places)
 - How does the system behave if a user has no linked bank accounts?
-  - Withdrawal button should be disabled or show a message prompting the user to add a bank account first
+  - Withdrawal button is disabled with a "Sin cuentas" label indicating no accounts are available
 - What happens to the duplicate withdrawal check if the user's session expires?
   - The check should be server-side based on transaction timestamps, not session state
 - How are negative balances prevented?
@@ -88,7 +88,7 @@ To prevent accidental duplicate withdrawals, when a user attempts to withdraw th
 - **FR-001**: System MUST display the user's current rewards balance prominently on the dashboard
 - **FR-002**: System MUST display transaction history grouped by month, with the most recent month first
 - **FR-003**: System MUST support three transaction types: cashback (credit), referral_bonus (credit), and withdrawal (debit)
-- **FR-004**: System MUST calculate the balance as the sum of all credits minus all debits
+- **FR-004**: System MUST calculate the balance as the sum of all credits minus all debits (implementation detail for FR-001)
 - **FR-005**: System MUST display each transaction with its type, amount, and timestamp
 - **FR-006**: System MUST allow users to initiate a withdrawal by selecting a linked bank account (WithdrawalMethod)
 - **FR-007**: System MUST display a confirmation screen before processing a withdrawal, showing the amount and selected bank account
@@ -102,7 +102,7 @@ To prevent accidental duplicate withdrawals, when a user attempts to withdraw th
 - **FR-015**: System MUST persist all transactions and maintain data integrity across sessions
 - **FR-016**: System MUST validate withdrawal amounts to ensure they are positive numbers with at most 2 decimal places
 - **FR-017**: System MUST mask bank account numbers in the UI for security (e.g., show only last 4 digits)
-- **FR-018**: System MUST handle cases where a user has no linked bank accounts by disabling or explaining the withdrawal action
+- **FR-018**: System MUST handle cases where a user has no linked bank accounts by disabling the withdrawal button with a "Sin cuentas" label, and showing "Sin saldo" when balance is zero
 
 ### Key Entities
 
@@ -127,13 +127,17 @@ To prevent accidental duplicate withdrawals, when a user attempts to withdraw th
 ## Assumptions *(optional)*
 
 - Users are already authenticated and have an active session (authentication/authorization is out of scope for this feature)
+- The API uses a hardcoded `user_id = 1` since authentication is out of scope
 - At least one withdrawal method (bank account) is already linked to the user's account
+- **Full balance withdrawal**: Users always withdraw the entire balance; there is no step to enter a custom withdrawal amount (amount is pre-filled with the full balance but can be manually edited)
 - Currency is displayed in a standard format (e.g., USD with $ symbol and 2 decimal places)
 - The "minutes" threshold for duplicate withdrawal detection is set to 5 minutes (a common pattern for duplicate action prevention)
 - Transaction timestamps are stored in UTC and converted to user's local time for display
 - The Figma design provides the visual layout and styling specifications for all screens mentioned
+- **UI language is Spanish** as specified by the Figma design ("Retirar", "Monto acumulado", "Elige tu método de retiro", etc.)
 - Network connectivity is available for API calls (offline functionality is out of scope)
 - The application supports modern browsers (Chrome, Firefox, Safari, Edge - last 2 versions)
+- **Withdrawal amounts with more than 2 decimal places** are rejected with a validation error (not rounded)
 
 ## Dependencies *(optional)*
 

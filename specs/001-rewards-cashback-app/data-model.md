@@ -379,7 +379,7 @@ COMMIT;
 2. **No Negative Balances**: Before creating a withdrawal transaction, validate that `current_balance - withdrawal_amount >= 0`
 3. **Withdrawal-Transaction Link**: Every completed withdrawal must have a corresponding transaction with `type='withdrawal'` and negative amount
 4. **Soft Deletes**: Withdrawal methods use `is_active` flag instead of hard deletes to maintain referential integrity
-5. **Timestamp Precision**: All timestamps use ISO 8601 format with timezone (stored as UTC in database)
+5. **Timestamp Precision**: SQLite `CURRENT_TIMESTAMP` produces `YYYY-MM-DD HH:MM:SS` format (no timezone suffix). Use SQLite's `datetime()` function for time comparisons (e.g., `datetime('now', '-5 minutes')`) rather than JS-computed ISO strings
 6. **Amount Precision**: All monetary amounts use `DECIMAL(10,2)` to prevent floating-point errors
 
 ---

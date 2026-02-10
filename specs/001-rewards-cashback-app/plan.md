@@ -14,15 +14,15 @@ Build a Rewards and Cashback application that allows users to view their balance
 ## Technical Context
 
 **Language/Version**:
-- Frontend: JavaScript/TypeScript with React 18+
-- Backend: Node.js 18+ with Express 4.x
+- Frontend: JavaScript with React 19
+- Backend: Node.js 18+ with Express 5
 
 **Primary Dependencies**:
-- Frontend: React 18+, Tailwind CSS 3.x, React Context API or Zustand, React Router
-- Backend: Express 4.x, better-sqlite3 (if SQLite) or fs-extra (if JSON), cors, express-validator
-- Testing: Vitest, React Testing Library, Supertest (for API testing)
+- Frontend: React 19, Tailwind CSS v4 (with `@theme` directive for custom design tokens), React Context API, React Router v7
+- Backend: Express 5, better-sqlite3 (WAL mode), cors
+- Testing: Vitest v4, React Testing Library, Supertest (for API testing)
 
-**Storage**: SQLite database or JSON file storage (decision to be made in research phase based on scalability needs)
+**Storage**: SQLite database (better-sqlite3 with WAL mode, synchronous API)
 
 **Testing**:
 - Unit tests: Vitest for business logic and utilities
@@ -59,8 +59,8 @@ Build a Rewards and Cashback application that allows users to view their balance
 
 | Principle | Status | Evidence |
 |-----------|--------|----------|
-| **I. React-First Frontend** | ✅ PASS | Frontend uses React 18+ with functional components, hooks (useState, useContext/Zustand), and follows React best practices |
-| **II. API-Driven Backend** | ✅ PASS | Backend exposes RESTful API with 4 documented endpoints (GET /api/user/profile, GET /api/transactions, GET /api/withdrawal-methods, POST /api/withdrawals) with proper HTTP status codes and error responses |
+| **I. React-First Frontend** | ✅ PASS | Frontend uses React 19 with functional components, hooks (useState, useContext), and follows React best practices |
+| **II. API-Driven Backend** | ✅ PASS | Backend exposes RESTful API with Express 5 and 4 documented endpoints (GET /api/user/profile, GET /api/transactions, GET /api/withdrawal-methods, POST /api/withdrawals) with proper HTTP status codes and error responses |
 | **III. Flexible Persistence** | ✅ PASS | Using SQLite or JSON (both allowed by constitution). Schema documented in data-model.md, supports all CRUD operations |
 | **IV. Pragmatic Testing** | ✅ PASS | Vitest for business logic unit tests, React Testing Library for component tests, Supertest for API endpoint tests - focused on critical paths |
 | **V. SOLID & Clean Code** | ✅ PASS | Plan follows separation of concerns (models/services/api/components), single responsibility principle, and meaningful naming conventions |
@@ -137,21 +137,16 @@ frontend/
 │   ├── utils/           # Helper functions (date formatting, currency formatting)
 │   ├── App.jsx          # Root component with routing
 │   ├── main.jsx         # Entry point
-│   └── index.css        # Tailwind imports
+│   └── index.css        # Tailwind v4 @theme tokens and imports
 ├── tests/
 │   ├── components/      # Component tests with React Testing Library
 │   └── utils/           # Utility function tests
 ├── package.json
 ├── vite.config.js
-├── vitest.config.js
-└── tailwind.config.js
-
-shared/
-└── types/               # TypeScript types (if using TS) or JSDoc types
-    └── models.js        # Shared type definitions
+└── vitest.config.js
 ```
 
-**Structure Decision**: Web application structure (Option 2) selected because the feature requires both a React frontend for the UI and a Node.js/Express backend for the RESTful API. The frontend and backend are completely decoupled and communicate via the documented API contracts. A `shared/` directory is included for type definitions to ensure consistency between frontend and backend.
+**Structure Decision**: Web application structure (Option 2) selected because the feature requires both a React frontend for the UI and a Node.js/Express backend for the RESTful API. The frontend and backend are completely decoupled and communicate via the documented API contracts.
 
 ## Complexity Tracking
 
