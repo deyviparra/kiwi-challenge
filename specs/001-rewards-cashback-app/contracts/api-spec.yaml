@@ -1,0 +1,511 @@
+openapi: 3.0.3
+info:
+  title: Rewards and Cashback API
+  description: RESTful API for managing rewards balance, transaction history, and withdrawals
+  version: 1.0.0
+  contact:
+    name: Kiwi Challenge Team
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+
+tags:
+  - name: User
+    description: User profile and balance operations
+  - name: Transactions
+    description: Transaction history operations
+  - name: Withdrawal Methods
+    description: Bank account management
+  - name: Withdrawals
+    description: Withdrawal operations
+
+paths:
+  /user/profile:
+    get:
+      summary: Get user profile and balance
+      description: Returns the authenticated user's profile information including current rewards balance
+      operationId: getUserProfile
+      tags:
+        - User
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+              example:
+                success: true
+                data:
+                  user:
+                    id: 1
+                    name: "John Doe"
+                    email: "john.doe@example.com"
+                    balance: 150.50
+                    created_at: "2026-01-10T10:00:00Z"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /transactions:
+    get:
+      summary: Get transaction history
+      description: Returns paginated list of user's transactions, sorted by timestamp (most recent first)
+      operationId: getTransactions
+      tags:
+        - Transactions
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of transactions to return
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 500
+        - name: offset
+          in: query
+          description: Number of transactions to skip (for pagination)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: type
+          in: query
+          description: Filter by transaction type
+          schema:
+            type: string
+            enum: [cashback, referral_bonus, withdrawal]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsResponse'
+              example:
+                success: true
+                data:
+                  transactions:
+                    - id: "txn_001"
+                      type: "cashback"
+                      amount: 25.50
+                      description: "Purchase reward from Amazon"
+                      timestamp: "2026-02-08T14:30:00Z"
+                    - id: "txn_002"
+                      type: "withdrawal"
+                      amount: -50.00
+                      description: "Withdrawal to Chase Bank ****1234"
+                      timestamp: "2026-02-07T10:15:00Z"
+                  total: 128
+                  balance: 150.50
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /withdrawal-methods:
+    get:
+      summary: Get withdrawal methods
+      description: Returns list of user's linked bank accounts available for withdrawals
+      operationId: getWithdrawalMethods
+      tags:
+        - Withdrawal Methods
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WithdrawalMethodsResponse'
+              example:
+                success: true
+                data:
+                  methods:
+                    - id: 1
+                      bank_name: "Chase Bank"
+                      account_number: "****7890"
+                      account_type: "checking"
+                      is_active: true
+                    - id: 2
+                      bank_name: "Bank of America"
+                      account_number: "****3210"
+                      account_type: "savings"
+                      is_active: true
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /withdrawals:
+    post:
+      summary: Create a withdrawal
+      description: Initiates a withdrawal request to transfer funds from rewards balance to a linked bank account
+      operationId: createWithdrawal
+      tags:
+        - Withdrawals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWithdrawalRequest'
+            examples:
+              normal_withdrawal:
+                summary: Normal withdrawal
+                value:
+                  method_id: 1
+                  amount: 50.00
+              with_override:
+                summary: Withdrawal with duplicate override
+                value:
+                  method_id: 1
+                  amount: 50.00
+                  override_duplicate_check: true
+      responses:
+        '201':
+          description: Withdrawal created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WithdrawalSuccessResponse'
+              example:
+                success: true
+                data:
+                  withdrawal:
+                    id: 5
+                    amount: 50.00
+                    status: "completed"
+                    method:
+                      bank_name: "Chase Bank"
+                      account_number: "****7890"
+                    requested_at: "2026-02-08T15:30:00Z"
+                    completed_at: "2026-02-08T15:30:01Z"
+                  new_balance: 100.50
+                message: "Withdrawal completed successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Duplicate withdrawal detected (conflict)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "DUPLICATE_WITHDRAWAL"
+                  message: "You recently withdrew this amount. Are you sure you want to proceed?"
+                  details:
+                    amount: 50.00
+                    last_withdrawal_at: "2026-02-08T15:27:00Z"
+                    allow_override: true
+                  timestamp: "2026-02-08T15:30:00Z"
+                  requestId: "req_abc123"
+        '422':
+          description: Validation error (e.g., insufficient balance)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: "INSUFFICIENT_BALANCE"
+                  message: "Insufficient balance for withdrawal"
+                  details:
+                    requested: 100.00
+                    available: 75.50
+                  timestamp: "2026-02-08T15:30:00Z"
+                  requestId: "req_abc123"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    # Success Response Schemas
+    UserProfileResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required: [user]
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+
+    TransactionsResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required: [transactions, total, balance]
+          properties:
+            transactions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Transaction'
+            total:
+              type: integer
+              description: Total number of transactions (for pagination)
+              example: 128
+            balance:
+              type: number
+              format: double
+              description: Current user balance
+              example: 150.50
+
+    WithdrawalMethodsResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required: [methods]
+          properties:
+            methods:
+              type: array
+              items:
+                $ref: '#/components/schemas/WithdrawalMethod'
+
+    WithdrawalSuccessResponse:
+      type: object
+      required: [success, data, message]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required: [withdrawal, new_balance]
+          properties:
+            withdrawal:
+              $ref: '#/components/schemas/Withdrawal'
+            new_balance:
+              type: number
+              format: double
+              description: User's balance after withdrawal
+              example: 100.50
+        message:
+          type: string
+          example: "Withdrawal completed successfully"
+
+    # Entity Schemas
+    User:
+      type: object
+      required: [id, name, email, balance, created_at]
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        balance:
+          type: number
+          format: double
+          description: Current rewards balance
+          example: 150.50
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-01-10T10:00:00Z"
+
+    Transaction:
+      type: object
+      required: [id, type, amount, timestamp]
+      properties:
+        id:
+          type: string
+          description: Unique transaction identifier
+          example: "txn_001"
+        type:
+          type: string
+          enum: [cashback, referral_bonus, withdrawal]
+          example: "cashback"
+        amount:
+          type: number
+          format: double
+          description: Transaction amount (positive for credits, negative for debits)
+          example: 25.50
+        description:
+          type: string
+          nullable: true
+          example: "Purchase reward from Amazon"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-02-08T14:30:00Z"
+
+    WithdrawalMethod:
+      type: object
+      required: [id, bank_name, account_number, account_type, is_active]
+      properties:
+        id:
+          type: integer
+          example: 1
+        bank_name:
+          type: string
+          example: "Chase Bank"
+        account_number:
+          type: string
+          description: Masked account number (only last 4 digits visible)
+          example: "****7890"
+        account_type:
+          type: string
+          enum: [checking, savings]
+          example: "checking"
+        is_active:
+          type: boolean
+          example: true
+
+    Withdrawal:
+      type: object
+      required: [id, amount, status, requested_at]
+      properties:
+        id:
+          type: integer
+          example: 5
+        amount:
+          type: number
+          format: double
+          example: 50.00
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+          example: "completed"
+        method:
+          type: object
+          required: [bank_name, account_number]
+          properties:
+            bank_name:
+              type: string
+              example: "Chase Bank"
+            account_number:
+              type: string
+              example: "****7890"
+        requested_at:
+          type: string
+          format: date-time
+          example: "2026-02-08T15:30:00Z"
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-02-08T15:30:01Z"
+
+    # Request Schemas
+    CreateWithdrawalRequest:
+      type: object
+      required: [method_id, amount]
+      properties:
+        method_id:
+          type: integer
+          description: ID of the withdrawal method (bank account) to use
+          example: 1
+        amount:
+          type: number
+          format: double
+          description: Amount to withdraw (must be positive, max 2 decimal places)
+          minimum: 0.01
+          example: 50.00
+        override_duplicate_check:
+          type: boolean
+          description: Set to true to bypass duplicate withdrawal warning
+          default: false
+          example: false
+
+    # Error Response Schema
+    ErrorResponse:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required: [code, message, timestamp]
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+              example: "INSUFFICIENT_BALANCE"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Insufficient balance for withdrawal"
+            details:
+              type: object
+              description: Additional context about the error
+              additionalProperties: true
+            timestamp:
+              type: string
+              format: date-time
+              example: "2026-02-08T15:30:00Z"
+            requestId:
+              type: string
+              description: Unique request identifier for debugging
+              example: "req_abc123"
+
+  responses:
+    BadRequest:
+      description: Invalid request (missing or malformed parameters)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "INVALID_REQUEST"
+              message: "Missing required field: method_id"
+              details:
+                field: "method_id"
+              timestamp: "2026-02-08T15:30:00Z"
+              requestId: "req_abc123"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "NOT_FOUND"
+              message: "Withdrawal method not found"
+              details:
+                method_id: 999
+              timestamp: "2026-02-08T15:30:00Z"
+              requestId: "req_abc123"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"
+              timestamp: "2026-02-08T15:30:00Z"
+              requestId: "req_abc123"
